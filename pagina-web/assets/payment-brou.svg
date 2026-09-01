@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 96" role="img" aria-label="BROU">
+  <rect width="160" height="96" rx="18" fill="#083d77"/>
+  <rect x="24" y="24" width="112" height="48" rx="10" fill="#ffffff"/>
+  <text x="80" y="58" text-anchor="middle" fill="#083d77" font-family="Arial, sans-serif" font-size="30" font-weight="900">BROU</text>
+  <rect x="24" y="76" width="112" height="5" rx="2.5" fill="#f9c80e"/>
+</svg>

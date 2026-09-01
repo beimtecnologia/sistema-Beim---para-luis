@@ -3,8 +3,14 @@
 respaldos/
 backup-*/
 
+# Dependencias y configuracion privada
+node_modules/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+
 # Archivos del sistema y del editor
 .DS_Store
 Thumbs.db
 .vscode/
-

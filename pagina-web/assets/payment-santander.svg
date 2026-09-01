@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 96" role="img" aria-label="Santander">
+  <rect width="160" height="96" rx="18" fill="#ec0000"/>
+  <path d="M80 18c18 16 23 28 16 39-5 8-18 13-31 7-13-6-17-21-8-34 2 14 12 20 22 18 10-2 14-13 1-30z" fill="#ffffff"/>
+  <text x="80" y="78" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="15" font-weight="800">SANTANDER</text>
+</svg>

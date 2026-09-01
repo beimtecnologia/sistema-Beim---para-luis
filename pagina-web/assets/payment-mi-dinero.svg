@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 96" role="img" aria-label="Mi Dinero">
+  <rect width="160" height="96" rx="18" fill="#0f766e"/>
+  <circle cx="44" cy="48" r="22" fill="#facc15"/>
+  <path d="M38 57V39h7l5 8 5-8h7v18h-7v-8l-5 8-5-8v8z" fill="#0f766e"/>
+  <text x="76" y="43" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" font-weight="800">MI</text>
+  <text x="76" y="62" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" font-weight="800">DINERO</text>
+</svg>

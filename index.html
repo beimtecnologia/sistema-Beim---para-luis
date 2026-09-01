@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistema de Gestion</title>
+    <link rel="icon" type="image/png" href="assets/gestion-icon.png?v=1">
+    <link rel="apple-touch-icon" href="assets/gestion-icon.png?v=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=52">
+    <link rel="stylesheet" href="ux.css?v=1">
+  </head>
+  <body>
+    <aside class="sidebar">
+      <button class="brand brand-session-trigger" id="brandSessionTrigger" type="button" aria-expanded="false">
+        <span class="brand-mark brand-logo">BEIM</span>
+        <div>
+          <strong id="brandSessionName">BEIM</strong>
+          <small id="brandSessionRole">Panel operativo</small>
+        </div>
+      </button>
+      <div class="brand-session-menu" id="brandSessionMenu" hidden><button type="button" id="sidebarLogoutButton">Salir</button></div>
+      <button class="sidebar-collapse" id="sidebarCollapseButton" type="button" aria-label="Contraer menú lateral" aria-expanded="true"><span aria-hidden="true">‹</span><small>Contraer</small></button>
+      <nav class="nav" aria-label="Secciones">
+        <button class="nav-button active" data-view="dashboard">Dashboard</button>
+        <button class="nav-button" data-view="orders">Ordenes</button>
+        <button class="nav-button" data-view="clients">Clientes</button>
+        <button class="nav-button" data-view="products">Stock taller</button>
+        <div class="sidebar-subnav" id="sidebarProductCategories"></div>
+        <button class="nav-button" data-view="sales">Ventas</button>
+        <button class="nav-button" data-view="expenses">Compras</button>
+        <button class="nav-button" data-view="services">Servicios</button>
+        <button class="nav-button" data-view="settings">Configuración</button>
+      </nav>
+      <button class="website-button" id="beimWebsiteButton" type="button">
+        Abrir Web Beim
+      </button>
+    </aside>
+
+    <main class="shell">
+      <header class="topbar">
+        <div class="topbar-title">
+          <p class="eyebrow" id="todayLabel"></p>
+          <h1 id="viewTitle">Dashboard</h1>
+        </div>
+        <div class="topbar-search">
+          <label class="sr-only" for="globalSearch">Buscar órdenes, clientes o productos</label>
+          <input class="global-search" id="globalSearch" type="search" placeholder="Buscar en el sistema">
+        </div>
+        <div class="admin-period-controls" id="adminPeriodControls" hidden>
+          <select id="adminPeriodMode" aria-label="Período contable">
+            <option value="day">Día actual</option>
+            <option value="month" selected>Mes actual</option>
+            <option value="year">Año actual</option>
+            <option value="specificDay">Día específico</option>
+            <option value="specificMonth">Mes específico</option>
+          </select>
+          <input id="adminSpecificDay" type="date" hidden aria-label="Elegir día">
+          <input id="adminSpecificMonth" type="month" hidden aria-label="Elegir mes">
+        </div>
+        <div class="topbar-actions">
+          <button class="primary-action-button" id="newOrderButton">Crear orden</button>
+          <button class="ghost-button cancel-order-button" id="cancelOrderButton" type="button">Cancelar creación</button>
+          <button class="ghost-button" id="saveOrderButton" type="button">Guardar</button>
+          <button class="ghost-button" id="printOrderButton" type="button">Imprimir</button>
+        </div>
+      </header>
+
+      <section class="view active" id="dashboard">
+        <div class="metrics" id="metrics"></div>
+        <div class="dashboard-focus" id="dashboardFocus"></div>
+        <div class="panel-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Ordenes recientes</h2>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>OT</th>
+                    <th>Cliente</th>
+                    <th>Equipo</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="recentOrders"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Stock bajo</h2>
+            </div>
+            <div id="lowStock" class="stack"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="orders">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Ordenes de trabajo</h2>
+          </div>
+          <div class="orders-status-bar" id="ordersStatusBar"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Numero de orden</th>
+                  <th>Nombre del cliente</th>
+                    <th>Equipo</th>
+                    <th>Etapa</th>
+                    <th>Tiempo</th>
+                    <th>Total</th>
+                    <th>Pago</th>
+                  <th id="ordersFinalReceiptHeader" hidden>Boleta</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view receipt-view" id="newOrder">
+        <iframe
+          class="receipt-frame"
+          src="boleta/index.html?v=27"
+          title="Nueva orden de trabajo"
+        ></iframe>
+      </section>
+
+      <section class="view" id="clients">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Clientes</h2>
+          </div>
+          <form class="form-grid" id="clientForm">
+            <input name="name" placeholder="Nombre" required>
+            <input name="document" placeholder="Cedula">
+            <input name="phone" placeholder="Telefono">
+            <input name="email" type="email" placeholder="Email">
+            <button type="submit">Agregar cliente</button>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Cedula</th>
+                  <th>Telefono</th>
+                  <th>Email</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="clientsTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="products">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Stock del taller</h2>
+            <button class="row-action" id="productCategorySettingsButton" type="button">Configurar</button>
+          </div>
+          <form class="web-stock-transfer" id="webStockTransferForm">
+            <div class="web-stock-transfer-copy">
+              <span class="eyebrow">Movimiento interno</span>
+              <strong>Traer producto desde la web</strong>
+              <small>La web descuenta unidades y el taller las recibe al precio web como costo.</small>
+            </div>
+            <label><span>Producto web</span><select name="sourceProductId" required></select></label>
+            <label><span>Subcategoria del taller</span><select name="categoryId" required></select></label>
+            <label><span>Cantidad</span><input name="quantity" type="number" min="1" step="1" value="1" required></label>
+            <label><span>Venta del repuesto</span><input name="workshopSalePrice" type="number" min="0" step="0.01" required></label>
+            <button type="submit">Transferir al taller</button>
+          </form>
+          <form class="form-grid" id="productForm">
+            <select name="categoryId" required></select>
+            <div class="brand-autocomplete-control">
+              <input name="brand" list="phoneBrandOptions" placeholder="Marca" required>
+              <button type="button" data-add-phone-brand="productForm" title="Añadir marca" aria-label="Añadir marca">+</button>
+            </div>
+            <div class="model-autocomplete-control">
+              <input name="model" list="productModelOptions" placeholder="Modelo" required>
+              <button type="button" data-add-phone-model="productForm" title="Añadir modelo">+</button>
+            </div>
+            <datalist id="productModelOptions"></datalist>
+            <input name="color" placeholder="Color">
+            <input name="costPrice" type="number" min="0" step="0.01" placeholder="Precio costo" required>
+            <input name="salePrice" type="number" min="0" step="0.01" placeholder="Precio de venta" required>
+            <input name="stock" type="number" min="0" step="1" placeholder="Stock" required>
+            <input name="minStock" type="number" min="0" step="1" placeholder="Stock mínimo" value="2">
+            <input name="supplierName" list="purchaseSupplierOptions" placeholder="Proveedor habitual">
+            <button type="submit">Agregar producto</button>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Subcategoria</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>Color</th>
+                  <th>Costo</th>
+                  <th>Venta</th>
+                  <th>Stock</th>
+                  <th>Mínimo</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="productsTable"></tbody>
+            </table>
+          </div>
+          <div class="menu-category-detail" id="stockMovementsPanel" hidden></div>
+        </section>
+      </section>
+
+      <section class="view" id="sales">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Nueva venta</h2>
+          </div>
+          <form class="form-grid" id="saleForm">
+            <select name="clientId" required></select>
+            <input name="productSearch" list="saleProductOptions" placeholder="Buscar producto o servicio" autocomplete="off">
+            <datalist id="saleProductOptions"></datalist>
+            <input name="quantity" type="number" min="1" step="1" placeholder="Cantidad">
+            <button type="button" id="addSaleItemButton">Agregar al carrito</button>
+            <select name="paymentMethod" required>
+              <option value="Efectivo">Efectivo</option>
+              <option value="Débito">Débito</option>
+              <option value="Crédito">Crédito</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Mixto">Pago combinado</option>
+            </select>
+            <input name="cashAmount" type="number" min="0" step="0.01" placeholder="Parte en efectivo (solo mixto)">
+            <input name="cardAmount" type="number" min="0" step="0.01" placeholder="Parte en tarjeta (solo mixto)">
+            <input name="transferAmount" type="number" min="0" step="0.01" placeholder="Parte en transferencia (solo mixto)">
+            <button type="submit" id="confirmSaleButton">CONFIRMAR VENTA Y DESCONTAR STOCK</button>
+          </form>
+          <div class="sale-cart" id="saleCart"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Venta</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Producto</th>
+                  <th>Cantidad</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="salesTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="expenses">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Compras</h2>
+          </div>
+          <form class="form-grid" id="expenseForm">
+            <select name="productId"></select>
+            <select name="categoryId" required></select>
+            <input name="brand" list="phoneBrandOptions" placeholder="Marca" required>
+            <div class="model-autocomplete-control">
+              <input name="model" list="purchaseModelOptions" placeholder="Modelo" required>
+              <button type="button" data-add-phone-model="expenseForm" title="Añadir modelo">+</button>
+            </div>
+            <datalist id="purchaseModelOptions"></datalist>
+            <input name="color" placeholder="Color">
+            <input name="quantity" type="number" min="1" step="1" placeholder="Cantidad comprada" required>
+            <input name="unitCost" type="number" min="0" step="0.01" placeholder="Costo por unidad" required>
+            <input name="salePrice" type="number" min="0" step="0.01" placeholder="Precio de venta" required>
+            <div class="model-autocomplete-control">
+              <input name="supplier" list="purchaseSupplierOptions" placeholder="Proveedor">
+              <button type="button" id="addPurchaseSupplier" title="Añadir proveedor">+</button>
+            </div>
+            <datalist id="purchaseSupplierOptions"></datalist>
+            <input name="invoiceNumber" placeholder="Factura o comprobante">
+            <input name="courierCost" type="number" min="0" step="0.01" placeholder="Costo de envío o cadete">
+            <select name="paymentMethod"><option value="Efectivo">Efectivo</option><option value="Transferencia">Transferencia / banco</option><option value="Tarjeta">Tarjeta</option><option value="Billetera">Billetera</option></select>
+            <select name="paymentStatus"><option value="Pagado">Compra pagada</option><option value="Pendiente">Compra a crédito / pendiente</option></select>
+            <input name="date" type="date" required>
+            <button type="submit">Registrar compra y sumar al stock</button>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Día</th>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Producto</th>
+                  <th>Proveedor</th>
+                  <th>Comprobante</th>
+                  <th>Cantidad</th>
+                  <th>Costo unitario</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="expensesTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="services">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Catalogo de trabajo</p>
+              <h2>Servicios</h2>
+            </div>
+          </div>
+          <form class="form-grid" id="serviceForm">
+            <input name="id" type="hidden">
+            <div class="service-category-control">
+              <select name="category" required></select>
+              <button id="addServiceCategory" type="button" title="Agregar categoria" aria-label="Agregar categoria">+</button>
+              <button id="removeServiceCategory" type="button" title="Quitar categoria" aria-label="Quitar categoria">−</button>
+            </div>
+            <input name="brand" list="phoneBrandOptions" placeholder="Marca" required>
+            <div class="model-autocomplete-control">
+              <input name="model" list="serviceModelOptions" placeholder="Modelo" required>
+              <button type="button" data-add-phone-model="serviceForm" title="Añadir modelo">+</button>
+            </div>
+            <datalist id="serviceModelOptions"></datalist>
+            <button id="serviceSubmitButton" type="submit">Agregar servicio</button>
+            <div class="service-cost-preview" aria-live="polite">
+              <span>Costo interno automatico</span>
+              <strong id="serviceCostPreview">$ 0</strong>
+              <div class="service-stock-preview" id="serviceStockPreview">Selecciona un producto</div>
+            </div>
+            <input name="manualCostPrice" type="number" min="0" step="0.01" placeholder="Precio costo manual" hidden>
+            <input name="salePrice" type="number" min="0" step="0.01" placeholder="Precio de venta" required>
+          </form>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th>Servicio</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>Disponibilidad</th>
+                  <th>Costo</th>
+                  <th>Venta</th>
+                  <th>Ganancia</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="servicesTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="menuCategory">
+        <section class="panel">
+          <div class="panel-head">
+            <div class="menu-category-heading" hidden>
+              <p class="eyebrow">Categoría</p>
+              <h2 id="menuCategoryTitle">Subcategorías</h2>
+            </div>
+            <div class="menu-category-subnav" id="menuCategorySubnav" aria-label="Subcategorías"></div>
+          </div>
+          <div class="menu-category-links" id="menuCategoryLinks"></div>
+          <div class="menu-category-detail" id="menuCategoryDetail" hidden></div>
+        </section>
+      </section>
+
+      <section class="view" id="cash">
+        <section class="panel">
+          <div class="panel-head"><div><p class="eyebrow">Control diario</p><h2>Caja diaria</h2></div><input id="cashBusinessDate" type="date"></div>
+          <div class="metrics" id="cashMetrics"></div>
+          <form class="form-grid" id="cashOpenForm"><input name="openingAmount" type="number" min="0" step="0.01" placeholder="Efectivo inicial" required><button type="submit">Abrir caja</button></form>
+          <form class="form-grid" id="cashCloseForm" hidden><input name="countedAmount" type="number" min="0" step="0.01" placeholder="Efectivo contado" required><input name="notes" placeholder="Observaciones del arqueo"><button type="submit">Cerrar y arquear caja</button></form>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Apertura</th><th>Esperado</th><th>Contado</th><th>Diferencia</th><th>Estado</th><th>Cierre</th></tr></thead><tbody id="cashSessionsTable"></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="view" id="reports">
+        <section class="panel">
+          <div class="panel-head"><div><p class="eyebrow">Estadísticas y exportación</p><h2>Informes</h2></div><div class="report-actions"><button type="button" id="exportReportCsv">Exportar CSV</button><button class="ghost-button" type="button" id="printReportButton">Imprimir / PDF</button></div></div>
+          <div class="form-grid report-filters"><label>Desde<input id="reportDateFrom" type="date"></label><label>Hasta<input id="reportDateTo" type="date"></label><button type="button" id="applyReportFilter">Actualizar informe</button><div class="capital-control"><label>Capital inicial<input id="initialCapitalInput" type="number" min="0" step="0.01" placeholder="$ 0"></label><div class="capital-current"><span>Capital actual</span><strong id="currentCapitalValue">$ 0</strong><small id="currentCapitalDetail">Capital + ingresos − gastos</small></div></div></div>
+          <section class="accounting-overview">
+            <div class="accounting-head"><div><p class="eyebrow">Situación financiera</p><h3>Tesorería, inventario y patrimonio</h3></div><small>Los movimientos entre cuentas no modifican la utilidad.</small></div>
+            <div class="accounting-metrics" id="accountingMetrics"></div>
+            <details class="accounting-config"><summary>Configurar saldos y registrar movimientos</summary>
+              <form class="accounting-opening-form" id="accountingOpeningForm"><label>Efectivo inicial<input name="cash" type="number" step="0.01"></label><label>Banco inicial<input name="bank" type="number" step="0.01"></label><label>Tarjetas pendientes inicial<input name="card" type="number" step="0.01"></label><label>Billeteras inicial<input name="wallet" type="number" step="0.01"></label><button type="submit">Guardar saldos</button></form>
+              <form class="accounting-movement-form" id="accountingMovementForm"><select name="type" required><option value="contribution">Aporte de capital</option><option value="withdrawal">Retiro del propietario</option><option value="transfer">Transferencia entre cuentas</option><option value="income">Otro ingreso</option><option value="expense">Otro gasto</option></select><select name="account" required><option value="cash">Caja</option><option value="bank">Banco / transferencia</option><option value="card">Tarjetas pendientes</option><option value="wallet">Billetera</option></select><select name="destinationAccount"><option value="">Sin destino</option><option value="cash">Caja</option><option value="bank">Banco / transferencia</option><option value="card">Tarjetas pendientes</option><option value="wallet">Billetera</option></select><input name="concept" placeholder="Concepto" required><input name="amount" type="number" min="0.01" step="0.01" placeholder="Importe" required><input name="date" type="date" required><button type="submit">Registrar movimiento</button></form>
+              <form class="accounting-payable-form" id="accountingPayableForm"><input name="supplier" placeholder="Proveedor" required><input name="concept" placeholder="Cuenta por pagar" required><input name="amount" type="number" min="0.01" step="0.01" placeholder="Importe" required><input name="dueDate" type="date"><button type="submit">Agregar deuda</button></form>
+              <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Movimiento</th><th>Cuenta</th><th>Concepto</th><th>Importe</th><th></th></tr></thead><tbody id="accountingMovementsTable"></tbody></table></div>
+              <div class="table-wrap"><table><thead><tr><th>Proveedor</th><th>Concepto</th><th>Vencimiento</th><th>Saldo</th><th>Estado</th><th></th></tr></thead><tbody id="accountingPayablesTable"></tbody></table></div>
+            </details>
+          </section>
+          <div class="metrics" id="reportMetrics"></div>
+          <div class="report-chart" id="reportChart"></div>
+          <div class="menu-category-detail-grid" id="reportHighlights"></div>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Ingresos</th><th>Gastos</th><th>Utilidad</th><th>Ventas</th></tr></thead><tbody id="reportTable"></tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Producto</th><th>Unidades vendidas</th><th>Importe neto</th></tr></thead><tbody id="reportProductsTable"></tbody></table></div>
+        </section>
+      </section>
+
+      <section class="view" id="settings">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Administración</p>
+              <h2>Configuración</h2>
+            </div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-head">
+              <div>
+                <h3>Menú lateral</h3>
+                <p>Organiza los módulos de la izquierda, crea grupos y coloca elementos dentro como subcategorías.</p>
+                <p class="autosave-status" id="autosaveStatus">Guardado automático activo.</p>
+              </div>
+            </div>
+            <form class="settings-category-form" id="menuItemForm">
+              <input name="label" placeholder="Nombre de la nueva categoría" required>
+              <select name="parentId" aria-label="Categoría superior"></select>
+              <button type="submit">Crear categoría</button>
+            </form>
+            <div class="settings-category-tree" id="menuSettingsTree"></div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-head">
+              <div>
+                <h3>Copias de seguridad</h3>
+                <p>El sistema conserva hasta 30 respaldos automáticos en la carpeta respaldos.</p>
+                <p class="autosave-status" id="backupStatus">Comprobando respaldos...</p>
+              </div>
+            </div>
+            <div class="settings-category-form">
+              <button type="button" id="createBackupButton">Crear respaldo ahora</button>
+              <button type="button" class="ghost-button" id="downloadBackupButton">Descargar copia JSON</button>
+              <label class="row-action" for="restoreBackupInput">Restaurar copia</label>
+              <input id="restoreBackupInput" type="file" accept="application/json,.json" hidden>
+            </div>
+          </div>
+          <div class="settings-section" id="managementUsersSection">
+            <div class="settings-section-head"><div><h3>Usuarios y permisos</h3><p id="currentManagementUser">Sin sesión iniciada</p></div><button class="row-action" type="button" id="managementLogoutButton">Cerrar sesión</button></div>
+            <form class="settings-category-form" id="managementUserForm"><input name="name" placeholder="Nombre del empleado" required><input name="username" placeholder="Usuario" required><input name="password" type="password" minlength="8" placeholder="Contraseña temporal" required><select name="role"><option value="vendedor">Vendedor</option><option value="tecnico">Técnico</option><option value="caja">Caja</option><option value="administrador">Administrador</option></select><button type="submit">Crear usuario</button></form>
+            <div class="role-permissions" id="rolePermissionsEditor" hidden><div class="settings-section-head"><div><h4>Acceso por rol</h4><p>Selecciona las secciones habilitadas para cada rol.</p></div><select id="permissionRoleSelect"><option value="vendedor">Vendedor</option><option value="tecnico">Técnico</option><option value="caja">Caja</option><option value="administrador">Administrador</option></select></div><div class="permission-grid" id="permissionCheckboxes"></div><button type="button" id="saveRolePermissionsButton">Guardar permisos</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Cuenta web vinculada</th><th>Estado</th><th>Último acceso</th></tr></thead><tbody id="managementUsersTable"></tbody></table></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div class="detail-backdrop" id="clientDetailPanel" aria-hidden="true">
+      <section class="client-detail-panel" role="dialog" aria-modal="true" aria-labelledby="clientDetailTitle">
+        <div class="order-detail-head">
+          <div>
+            <p class="eyebrow">Historial del cliente</p>
+            <h2 id="clientDetailTitle">Detalle del cliente</h2>
+          </div>
+          <button class="row-action" id="closeClientDetail" type="button">Cerrar</button>
+        </div>
+        <div class="client-detail-body" id="clientDetailBody"></div>
+      </section>
+    </div>
+
+    <div class="detail-backdrop" id="reportDetailPanel" aria-hidden="true">
+      <section class="client-detail-panel report-detail-panel" role="dialog" aria-modal="true" aria-labelledby="reportDetailTitle">
+        <div class="order-detail-head"><div><p class="eyebrow">Detalle del informe</p><h2 id="reportDetailTitle">Información del período</h2></div><button class="row-action" id="closeReportDetail" type="button">Cerrar</button></div>
+        <div class="client-detail-body" id="reportDetailBody"></div>
+      </section>
+    </div>
+
+    <div class="detail-backdrop" id="orderDetailPanel" aria-hidden="true">
+      <section class="order-detail-panel" role="dialog" aria-modal="true" aria-labelledby="orderDetailTitle">
+        <div class="order-detail-head">
+          <div>
+            <p class="eyebrow">Seguimiento tecnico</p>
+            <h2 id="orderDetailTitle">Detalle de orden</h2>
+          </div>
+          <button class="row-action" id="closeOrderDetail" type="button">Cerrar</button>
+        </div>
+        <div class="order-detail-workspace">
+          <form class="tech-panel" id="techOrderForm">
+            <input name="orderId" type="hidden">
+            <div class="order-context-bar" id="orderContextBar"></div>
+            <div class="order-workflow" id="orderWorkflow" aria-label="Progreso de la orden"></div>
+            <label>
+              Estado de la reparacion
+              <select name="repairStatus">
+                <option>En diagnostico</option>
+                <option>Presupuestado</option>
+                <option>Aprobado</option>
+                <option>Esperando aprobacion</option>
+                <option>Esperando repuesto</option>
+                <option>En reparacion</option>
+                <option>Listo para retirar</option>
+                <option>Finalizado</option>
+                <option>Entregado</option>
+                <option>Cancelado</option>
+              </select>
+            </label>
+            <label>
+              Observaciones del tecnico
+              <textarea name="technicianNotes" placeholder="Trabajo realizado, repuestos sugeridos, pruebas pendientes."></textarea>
+            </label>
+            <section class="technical-budget-panel" aria-labelledby="technicalBudgetTitle">
+              <div class="technical-budget-head">
+                <div>
+                  <h3 id="technicalBudgetTitle">Presupuesto tecnico</h3>
+                  <p>Servicios o repuestos encontrados durante el diagnostico.</p>
+                </div>
+                <button class="row-action" id="addServiceItemButton" type="button">Agregar</button>
+              </div>
+              <datalist id="technicalServiceOptions"></datalist>
+              <div class="service-items" id="serviceItemsList"></div>
+              <div class="technical-budget-total"><div><span>Total de venta</span><strong id="serviceItemsTotal">$ 0</strong></div><div><span>Costo interno</span><strong id="serviceItemsCostTotal">$ 0</strong></div></div>
+            </section>
+            <div class="order-detail-actions">
+              <button class="ghost-button" id="cancelOrderDetail" type="button">Cancelar</button>
+              <button type="submit">Guardar seguimiento</button>
+            </div>
+          </form>
+          <article class="order-receipt-panel" id="orderReceiptPanel"></article>
+        </div>
+      </section>
+    </div>
+
+    <div class="detail-backdrop" id="categorySettingsPanel" aria-hidden="true">
+      <section class="category-settings-panel" role="dialog" aria-modal="true" aria-labelledby="categorySettingsTitle">
+        <div class="order-detail-head">
+          <div>
+            <p class="eyebrow">Stock del taller</p>
+            <h2 id="categorySettingsTitle">Configurar subcategorias</h2>
+          </div>
+          <button class="row-action" id="closeCategorySettings" type="button">Cerrar</button>
+        </div>
+        <div class="category-settings-body">
+          <form class="form-grid compact-form" id="categoryForm">
+            <input name="name" placeholder="Nueva subcategoria" required>
+            <button type="submit">Anadir</button>
+          </form>
+          <div class="category-list settings-category-list" id="productCategoriesList"></div>
+        </div>
+      </section>
+    </div>
+
+    <datalist id="phoneBrandOptions"></datalist>
+
+    <div class="action-dialog-backdrop" id="actionReasonDialog" aria-hidden="true">
+      <section class="action-dialog" role="alertdialog" aria-modal="true" aria-labelledby="actionReasonTitle" aria-describedby="actionReasonDescription">
+        <div class="action-dialog-icon" aria-hidden="true">!</div>
+        <div class="action-dialog-copy">
+          <p class="eyebrow">Acción administrativa</p>
+          <h2 id="actionReasonTitle">Anular venta</h2>
+          <p id="actionReasonDescription">El producto volverá al stock. Indicá el motivo para dejar registro de la operación.</p>
+        </div>
+        <label class="action-dialog-field">
+          <span>Motivo de la anulación</span>
+          <textarea id="actionReasonInput" rows="3" maxlength="240" placeholder="Ej.: Venta anulada por solicitud del cliente"></textarea>
+          <small id="actionReasonError" aria-live="polite"></small>
+        </label>
+        <div class="action-dialog-actions">
+          <button class="ghost-button" id="actionReasonCancel" type="button">Cancelar</button>
+          <button id="actionReasonAccept" type="button">Anular venta</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="action-dialog-backdrop" id="uxNoticeDialog" aria-hidden="true">
+      <section class="action-dialog ux-notice-dialog" role="alertdialog" aria-modal="true" aria-labelledby="uxNoticeTitle" aria-describedby="uxNoticeDescription">
+        <div class="action-dialog-icon ux-notice-icon" aria-hidden="true">✓</div>
+        <div class="action-dialog-copy">
+          <p class="eyebrow" id="uxNoticeEyebrow">Operación completada</p>
+          <h2 id="uxNoticeTitle">Transferencia realizada</h2>
+          <p id="uxNoticeDescription">El producto ya está disponible en el stock del taller.</p>
+        </div>
+        <div class="action-dialog-actions ux-notice-actions">
+          <button id="uxNoticeAccept" type="button">Entendido</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="action-dialog-backdrop" id="textInputDialog" aria-hidden="true">
+      <section class="action-dialog text-input-dialog" role="dialog" aria-modal="true" aria-labelledby="textInputTitle" aria-describedby="textInputDescription">
+        <div class="action-dialog-icon text-input-icon" aria-hidden="true">+</div>
+        <div class="action-dialog-copy">
+          <p class="eyebrow" id="textInputEyebrow">Nueva categoría</p>
+          <h2 id="textInputTitle">Crear categoría de servicio</h2>
+          <p id="textInputDescription">Organizá tus servicios para encontrarlos y cargarlos más rápido.</p>
+        </div>
+        <label class="action-dialog-field">
+          <span id="textInputLabel">Nombre de la categoría</span>
+          <input id="textInputValue" type="text" maxlength="60" autocomplete="off" placeholder="Ej.: Reparación de pantallas">
+          <small id="textInputError" aria-live="polite"></small>
+        </label>
+        <div class="action-dialog-actions">
+          <button class="ghost-button" id="textInputCancel" type="button">Cancelar</button>
+          <button id="textInputAccept" type="button">Crear categoría</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="action-dialog-backdrop" id="confirmActionDialog" aria-hidden="true">
+      <section class="action-dialog confirm-action-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmActionTitle" aria-describedby="confirmActionDescription">
+        <div class="action-dialog-icon confirm-action-icon" aria-hidden="true">!</div>
+        <div class="action-dialog-copy">
+          <p class="eyebrow" id="confirmActionEyebrow">Acción irreversible</p>
+          <h2 id="confirmActionTitle">Eliminar servicio</h2>
+          <p id="confirmActionDescription">Esta acción eliminará el servicio de forma permanente.</p>
+        </div>
+        <div class="confirm-action-summary" id="confirmActionSummary" hidden></div>
+        <div class="action-dialog-actions confirm-action-actions">
+          <button class="ghost-button" id="confirmActionCancel" type="button">Cancelar</button>
+          <button class="confirm-action-submit" id="confirmActionAccept" type="button">Eliminar servicio</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="detail-backdrop open" id="managementLoginPanel" aria-hidden="false">
+      <section class="category-settings-panel" role="dialog" aria-modal="true" aria-labelledby="managementLoginTitle">
+        <div class="order-detail-head"><div><p class="eyebrow">Acceso seguro</p><h2 id="managementLoginTitle">Iniciar sesión</h2></div></div>
+        <div class="category-settings-body"><p id="managementLoginHelp">Ingresa tus credenciales.</p><form class="form-grid" id="managementLoginForm"><input name="name" placeholder="Nombre del administrador" hidden><input name="username" placeholder="Usuario" autocomplete="username" required><input name="password" type="password" minlength="8" placeholder="Contraseña" autocomplete="current-password" required><button type="submit">Continuar</button><button type="button" class="ghost-button" id="managementLoginCancelButton">Cancelar</button></form><p class="autosave-status" id="managementLoginError"></p></div>
+      </section>
+    </div>
+
+  <script src="app.js?v=187"></script>
+  </body>
+</html>

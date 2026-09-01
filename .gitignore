@@ -1,0 +1,10 @@
+# Copias de seguridad y datos generados localmente
+*.rar
+respaldos/
+backup-*/
+
+# Archivos del sistema y del editor
+.DS_Store
+Thumbs.db
+.vscode/
+
